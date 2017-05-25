@@ -7,19 +7,18 @@ using System.Threading.Tasks;
 
 namespace SDiZO_2
 {
-
     class AdjacencyList
     {
-        int n, m, vNS, Alen, weight; //alen is n-1
+        int n, m, vNS, Alen, weight;
         const int MAXINT = int.MaxValue;
         Edge e;
-        public ALElement[] UndirectedGraph; //GrafNIESkierowany;
-        public ALElement[] DirectedGraph;//GrafSkierowany;
-        public AdjacencyList Result;
         ALElement p;
+
+        public ALElement[] UndirectedGraph;
+        public ALElement[] DirectedGraph;
+        public AdjacencyList Result;       
         Edge[] edges;
 
-        //dijskra
         int[] S;
         long[] d;
         int[] p1;
@@ -45,16 +44,12 @@ namespace SDiZO_2
 
         }
 
-        public void Zeruj(int n)
+        private ALElement getAList(int n)
         {
-            int i;
-
-            for (i = 0; i < n; i++) DirectedGraph[i] = null;
-            Alen = n - 1;
-            weight = 0;
+            return DirectedGraph[n];
         }
 
-        private ALElement getAList(int n)
+        private ALElement getAListU(int n)
         {
             return UndirectedGraph[n];
         }
@@ -83,13 +78,11 @@ namespace SDiZO_2
             DirectedGraph[e.v1] = p;
         }
 
-        public void LoadFromFile()
+        public void LoadFromFile(string fileName)
         {
-            string fileName;
             string[] lines;
-            Console.WriteLine("Podaj nazwę pliku:");
-            fileName = Console.ReadLine() + ".txt";
-            lines = File.ReadAllLines(fileName);
+            string FileName = fileName + ".txt";
+            lines = File.ReadAllLines(FileName);
             int[] lineArray = lines[0].Split(' ').Select(int.Parse).ToArray();
             this.m = lineArray[0]; // krawędzie
             this.n = lineArray[1]; // wierzchołki
@@ -110,7 +103,7 @@ namespace SDiZO_2
                 DirectedGraph[i] = null;
             }
 
-            for (int i = 1; i < lines.Length; i++)
+            for (int i = 1; i < m; i++)
             {
                 lineArray = lines[i].Split(' ').Select(int.Parse).ToArray();
                 e.v1 = lineArray[0];
@@ -124,12 +117,85 @@ namespace SDiZO_2
             }
         }
 
+        public void GenerateRandomGraph(int v, int g)
+        {
+            Random random = new Random();
+            int i,w,k,v1;
+            this.n = v;
+            this.m = v + (v * g / 100);
+            UndirectedGraph = new ALElement[v];
+            DirectedGraph = new ALElement[v];
+
+            for (i = 0; i < v; i++) 
+            {
+                UndirectedGraph[i] = null;
+                DirectedGraph[i] = null;
+            }
+
+            p = new ALElement();
+            p.v = 4;
+            p.next = UndirectedGraph[0];
+            p.weight = random.Next(1,10);
+            UndirectedGraph[0] = p;
+            w = p.weight;
+
+            for (i = 0; i < v-1; i++)
+            {
+                e.v1 = i;
+                e.v2 = i + 1;
+                e.weight = random.Next(1, 10);
+                addEdge(e);
+            }
+
+            p = new ALElement();
+            p.v = 0;
+            p.next = UndirectedGraph[v - 1];
+            p.weight = w;// random.Next(1,10);
+            UndirectedGraph[v - 1] = p;
+                   
+            p = new ALElement();
+            p.v = 0;
+            p.next = DirectedGraph[v - 1];
+            p.weight = w;// random.Next(1,10);
+            DirectedGraph[v - 1] = p;
+            weight += w;
+
+            for (i = v; i < m; i++)
+            {
+                k = random.Next(0, v - 1);
+                w = random.Next(1, 10);
+                v1 = random.Next(0, v - 1);
+
+                p = new ALElement();
+                p.weight = w;
+                p.next = UndirectedGraph[k];
+                p.v = v1;
+                UndirectedGraph[k] = p;
+
+                p = new ALElement();
+                p.weight = w;
+                p.next = DirectedGraph[k];
+                p.v = v1;
+                DirectedGraph[k] = p;
+
+                p = new ALElement();
+                p.weight = w;
+                p.next = UndirectedGraph[v1];
+                p.v = k;
+                UndirectedGraph[v1] = p;
+
+                weight += w;
+            }
+
+        }
+
         public void ShowList()
         {
+            Console.WriteLine("Lista siąsiedztwa:");
             for (int i = 0; i < n; i++)
             {
                 Console.Write("A[" + i + "] =");
-                p = UndirectedGraph[i];
+                p = DirectedGraph[i]; //skierowany
                 while (p != null)
                 {
                     Console.Write("{0,5}:{1}", p.v, p.weight);               
@@ -137,23 +203,7 @@ namespace SDiZO_2
                 }
                 Console.WriteLine();
             }
-            Console.WriteLine("AAAAAA:" + weight);
-        }
-
-        public void ShowMST()
-        {
-            for (int i = 0; i < n; i++)
-            {
-                Console.Write("A[" + i + "] =");
-                p = Result.UndirectedGraph[i];
-                while (p != null)
-                {
-                    Console.Write("{0,5}:{1}", p.v, p.weight);
-                    p = p.next;
-                }
-                Console.WriteLine();
-            }
-            Console.WriteLine("AAAAAA:" + Result.weight);
+            Console.WriteLine("Waga Grafu:" + weight);
         }
 
         public void Kruskal()
@@ -169,12 +219,12 @@ namespace SDiZO_2
             }
 
             //umieszczam w kolejce kolejne krawedzie grafu
-            for (i = 0; i < m; i++)
+            /*for (i = 0; i < m; i++)
             {
                 Q.Push(edges[i]);
-            }
+            }*/
 
-            /*for (i = 0; i < n; i++)
+            for (i = 0; i < n; i++)
             {
                 for (p = getAList(i); p != null; p = p.next)
                 {
@@ -183,7 +233,7 @@ namespace SDiZO_2
                     e.weight = p.weight;
                     Q.Push(e);
                 }
-            }*/
+            }
 
             for (i = 1; i < n; i++)
             {       
@@ -215,7 +265,7 @@ namespace SDiZO_2
 
             for (i = 1; i < n; i++)
             {
-                for (p = getAList(v); p != null; p = p.next)           
+                for (p = getAListU(v); p != null; p = p.next)           
                     if(!visited[p.v])
                     {
                         e.v1 = v;
@@ -235,7 +285,24 @@ namespace SDiZO_2
             }
         }
 
-        public void Dijskra()
+        public void ShowMST()
+        {
+            Console.WriteLine("Lista siąsiedztwa:");
+            for (int i = 0; i < n; i++)
+            {
+                Console.Write("A[" + i + "] =");
+                p = Result.UndirectedGraph[i];
+                while (p != null)
+                {
+                    Console.Write("{0,5}:{1}", p.v, p.weight);
+                    p = p.next;
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine("Waga MST:" + Result.weight);
+        }
+    
+        public void Dijkstra()
         {
             
             int i, j, u;
@@ -274,27 +341,6 @@ namespace SDiZO_2
                     }
                 }
             }  
-        }
-
-        public void ShowAfterDijskra()
-        {
-            if (success)
-            {
-                int i, j;
-                int sptr = 0;
-                Console.WriteLine("Wierzchołek początkowy: {0}", vNS);
-                for (i = 0; i < n; i++)
-                {
-                    Console.Write("Dojście do wierzchołka {0}: ", i);
-
-                    for (j = i; j > -1; j = p1[j]) S[sptr++] = j;
-
-                    while (sptr != 0) Console.Write("{0} ", S[--sptr]);
-
-                    Console.WriteLine("| Koszt: {0}", d[i]);
-                }
-            }
-            else Console.WriteLine("Negative Cycle found!");
         }
 
         public void BellmanFord()
@@ -345,6 +391,28 @@ namespace SDiZO_2
                 }
             }
             return true;
+        }
+
+        public void ShowShortestPaths()
+        {
+            if (success)
+            {
+                int i, j;
+                int sptr = 0;
+                Console.WriteLine("Lista siąsiedztwa:");
+                Console.WriteLine("Wierzchołek początkowy: {0}", vNS);
+                for (i = 0; i < n; i++)
+                {
+                    Console.Write("Dojście do wierzchołka {0}: ", i);
+
+                    for (j = i; j > -1; j = p1[j]) S[sptr++] = j;
+
+                    while (sptr != 0) Console.Write("{0} ", S[--sptr]);
+
+                    Console.WriteLine("| Koszt: {0}", d[i]);
+                }
+            }
+            else Console.WriteLine("Negative Cycle found!");
         }
     }
 }

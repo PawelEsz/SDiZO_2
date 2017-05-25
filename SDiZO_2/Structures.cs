@@ -31,8 +31,8 @@ namespace SDiZO_2
         {
             int i, j;
 
-            i = hpos++;                     // i ustawiamy na koniec kopca
-            j = (i - 1) >> 1;               // Obliczamy pozycję rodzica
+            i = hpos++;    // i ustawiamy na koniec kopca
+            j = (i - 1) >> 1;   // Obliczamy pozycję rodzica
 
             // Szukamy miejsca w kopcu dla e
 
@@ -118,7 +118,6 @@ namespace SDiZO_2
     {
         public ALElement next;
         public int v, weight;
-
     }
 
 }

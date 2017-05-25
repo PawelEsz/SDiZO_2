@@ -7,15 +7,12 @@ using System.IO;
 
 namespace SDiZO_2
 {
-
     class AdjacencyMatrix
     {
         public int n { get; set; } //liczba wierzchołków
         public int m { get; set; } //liczba krawedzi
-        public int vNS { get; set; }
+        public int vNS = 0;
         public int weight { get; set; }
-        public int v1 { get; set; }
-        public int v2 { get; set; }
         Edge[] edges;
         Edge e;
         const int MAXINT = int.MaxValue;
@@ -26,9 +23,9 @@ namespace SDiZO_2
         public AdjacencyMatrix Result;
 
         bool success = true;
-        int[] d;//  = new int[n];
-        int[] p;// = new int[n];
-        int[] S;// = new int[n];
+        long[] d;
+        int[] p;
+        int[] S;
 
         public AdjacencyMatrix(int n, int m)
         {
@@ -51,12 +48,6 @@ namespace SDiZO_2
 
         }
 
-        void ZerujMacierz()
-        {
-            for (int i = 0; i < n; i++)
-                for (int j = 0; j < n; j++) MatrixS[i, j] = 0;
-        }
-
         void AddEdge(Edge e)
         {
             weight += e.weight;
@@ -65,15 +56,14 @@ namespace SDiZO_2
             MatrixS[e.v1, e.v2] = e.weight;
         }
 
-        public void LoadFromFile()
+        public void LoadFromFile(string fileName)
         {
-            string fileName;
+            //string fileName;
             string[] lines;
-            string name = "ELO";
-            char x = name[0];
-            Console.WriteLine("Podaj nazwę pliku:");
-            fileName = Console.ReadLine() + ".txt";
-            lines = File.ReadAllLines(fileName);
+            string FileName = fileName + ".txt";
+            //Console.WriteLine("Podaj nazwę pliku:");
+            //fileName = Console.ReadLine() + ".txt";
+            lines = File.ReadAllLines(FileName);
             int[] lineArray = lines[0].Split(' ').Select(int.Parse).ToArray();
             this.m = lineArray[0]; // krawedzie
             this.n = lineArray[1]; // wiersze
@@ -81,11 +71,12 @@ namespace SDiZO_2
             {
                 this.vNS = lineArray[2];
             }
+            this.weight = 0;
             MatrixS = new int[n, n]; //tworze macierz
             MatrixNS = new int[n, n];
             edges = new Edge[m];
 
-            for (int i = 1; i < lines.Length; i++)
+            for (int i = 1; i < m; i++)
             {
                 lineArray = lines[i].Split(' ').Select(int.Parse).ToArray();
                 e.v1 = lineArray[0];
@@ -99,8 +90,67 @@ namespace SDiZO_2
             }
         }
 
-        public void ShowMatrixS()
+        public void GenerateRandomGraph(int v, int g)
         {
+            int i,j;
+            Random random = new Random();
+            this.n = v;
+            this.m = v + (v * g / 100);
+            MatrixNS = new int[v, v];
+            MatrixS = new int[v, v];
+            edges = new Edge[m];
+
+            //zeruje macierze
+            for (i = 0; i < v; i++)
+            {
+                for (j = 0; i < v; i++)
+                {
+                    MatrixS[i, j] = 0;
+                    MatrixNS[i, j] = 0;
+                }
+            }
+
+            for (i = 0; i < v - 1; i++)
+            {
+                int we = random.Next(1, 10);
+                edges[i].v1 = i;
+                edges[i].v2 = i + 1;
+                edges[i].weight = we;
+
+                e.v1 = i;
+                e.v2 = i + 1;               
+                e.weight = we;
+                AddEdge(e);
+            }
+
+            MatrixNS[v - 1, 0] = random.Next(1, 10);
+            MatrixNS[0, v - 1] = MatrixNS[v - 1, 0];
+            MatrixS[v - 1, 0] = MatrixNS[v - 1, 0];
+            edges[v - 1].v1 = v - 1;
+            edges[v - 1].v2 = 0;
+            edges[v - 1].weight = MatrixNS[v - 1, 0];
+
+            for(i=v;i<m;i++)
+            {
+                e.v1 = random.Next(1, v - 1);
+                e.v2 = random.Next(1, v - 1);
+                e.weight = random.Next(1, 10);
+
+                if (MatrixNS[e.v2, e.v1] == 0 && MatrixS[e.v1,e.v2] == 0)
+                {
+                    edges[v].v1 = e.v1;
+                    edges[v].v2 = e.v2;
+                    edges[v].weight = e.weight;
+                    AddEdge(e);        
+                }
+                else i--;
+            }
+
+        }
+
+        public void ShowMatrix()
+        {
+            Console.WriteLine("Macierz siąsiedztwa:");
             Console.Write("{0,5}", "");
             for (int i = 0; i < n; i++) Console.Write("{0,5}", i);
             Console.WriteLine();
@@ -114,23 +164,6 @@ namespace SDiZO_2
                 Console.WriteLine();
             }
             Console.WriteLine("AAAAAA:" + weight);
-        }
-
-        public void ShowMST()
-        {
-            Console.Write("{0,5}", "");
-            for (int i = 0; i < n; i++) Console.Write("{0,5}", i);
-            Console.WriteLine();
-            for (int x = 0; x < n; x++)
-            {
-                Console.Write("{0,5}", x);
-                for (int y = 0; y < n; y++)
-                {
-                    Console.Write("{0,5}", Result.MatrixS[x, y]);
-                }
-                Console.WriteLine();
-            }
-            Console.WriteLine("AAAAAA:" + Result.weight);
         }
 
         public void Kruskal()
@@ -202,16 +235,47 @@ namespace SDiZO_2
             }
         }
 
-        public void Dijskra()
+        public void ShowMST()
+        {
+            /*Console.Write("{0,5}", "");
+            for (int i = 0; i < n; i++) Console.Write("{0,5}", i);
+            Console.WriteLine();
+            for (int x = 0; x < n; x++)
+            {
+                Console.Write("{0,5}", x);
+                for (int y = 0; y < n; y++)
+                {
+                    Console.Write("{0,5}", Result.MatrixS[x, y]);
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine("AAAAAA:" + Result.weight);*/
+
+            Console.WriteLine("Macierz siąsiedztwa:");
+            Console.Write("{0,5}", "");
+            for (int i = 0; i < n; i++) Console.Write("{0,5}", i);
+            Console.WriteLine();
+            for (int x = 0; x < n; x++)
+            {
+                Console.Write("{0,5}", x);
+                for (int y = 0; y < n; y++)
+                {
+                    Console.Write("{0,5}", Result.MatrixNS[x, y]);
+                }
+                Console.WriteLine();
+            }
+            Console.WriteLine("Waga MST:" + Result.weight);
+        }
+
+        public void Dijkstra()
         {
             
             int i, j, u, p1;
 
-            d = new int[n];
+            d = new long[n];
             p = new int[n];
             bool[] QS = new bool[n];
             S = new int[n];
-            //int sptr = 0; //wskaznik stosu
             success = true;
 
             for (i = 0; i < n; i++)
@@ -237,35 +301,79 @@ namespace SDiZO_2
                 {
                     if(MatrixS[u,p1] > 0)
                         {
-                        if (!QS[p1] && (d[p1] > d[u] + MatrixS[u,p1]))
+                        if (!QS[p1] && (d[p1] > d[u] + MatrixS[u, p1])) //MatrixS[u,p1]
                         {
-                            d[p1] = d[u] + MatrixS[u, p1];
+                            d[p1] = d[u] + MatrixS[u, p1]; //MatrixS[u,p1]
                             p[p1] = u;
                         }
                     }
                 }
             }
-
-            /*Console.WriteLine("Wierzchołek początkowy: {0}", vNS);
-            for (i = 0; i < n; i++)
-            {
-                Console.Write("Dojście do wierzchołka {0}: ", i);
-
-                for (j = i; j > -1; j = p[j]) S[sptr++] = j;
-
-                while (sptr != 0) Console.Write("{0} ", S[--sptr]);
-
-                Console.WriteLine("| Koszt: {0}", d[i]);
-            }*/
-
         }
 
-        public void ShowAfterDijskra()
+        public void BellmanFord()
+        {
+            int i;
+            d = new long[n];
+            p = new int[n];
+            S = new int[n];
+
+            for (i = 0; i < n; i++)
+            {
+                d[i] = MAXINT;
+                p[i] = -1;
+            }
+
+            if (BellmanFord(vNS, p, d))
+                success = true;
+            else success = false;
+        }
+
+        private bool BellmanFord(int v, int[] p1, long[] d)
+        {
+            int i, j, p2;
+            bool test;
+
+            d[v] = 0;
+            for (i = 1; i < n; i++)
+            {
+                test = true;
+                for (j = 0; j < n; j++)
+                    for (p2 = 0; p2 < n; p2++)
+                    {
+                        if (MatrixS[j, p2] != 0)
+                        {
+                            if (d[p2] > d[j] + MatrixS[j, p2])
+                            {
+                                test = false;
+                                d[p2] = d[j] + MatrixS[j, p2];
+                                p1[p2] = j;
+                            }
+                            if (test) return true;
+                        }
+                    }
+            }
+
+            for (j = 0; j < n; j++)
+            {
+                for (p2 = 0; p2 < n; p2++)
+                {
+                    if (MatrixS[j, p2] != 0)
+                    {
+                        if (d[p2] > d[j] + MatrixS[j, p2]) return false;
+                    }
+                }
+            }
+            return true;
+        }
+
+        public void ShowShortestPaths()
         {
             if (success)
             {
                 int i, j;
                 int sptr = 0;
+                Console.WriteLine("Macierz siąsiedztwa:");
                 Console.WriteLine("Wierzchołek początkowy: {0}", vNS);
                 for (i = 0; i < n; i++)
                 {
@@ -280,6 +388,5 @@ namespace SDiZO_2
             }
             else Console.WriteLine("Negative Cycle found!");
         }
-
     }
 }
